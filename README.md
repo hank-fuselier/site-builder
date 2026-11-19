@@ -25,7 +25,7 @@ Open `PUBLIC_BASE_URL/admin` and sign in with ADMIN_USER / ADMIN_PASSWORD.
 docker compose --profile caddy up -d --build
 ```
 
-**Already running nginx/Caddy for something else?** Use the app-only mode and proxy a hostname to `127.0.0.1:8080`. For customer domains, add them to that proxy too (the app picks the site from the `Host` header).
+**Already running nginx/Caddy for something else?** Use the app-only mode and proxy a hostname to `127.0.0.1:8080`. If that proxy runs in Docker, copy `docker-compose.override.example.yml` to `docker-compose.override.yml` and set the proxy's network name; the proxy then reaches the app at `site-builder-app:8080`. For customer domains, add them to that proxy too (the app picks the site from the `Host` header).
 
 ### Without Docker
 

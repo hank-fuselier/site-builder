@@ -1,5 +1,6 @@
 # Two ways to run:
-#   docker compose up -d                  -> app only, on port ${APP_PORT:-8080} (put it behind your existing nginx/caddy)
+#   docker compose up -d                  -> app only, on ${APP_BIND:-127.0.0.1}:${APP_PORT:-8080} (put it behind your existing nginx/caddy)
+#     To join an existing reverse proxy's Docker network, see docker-compose.override.example.yml
 #   docker compose --profile caddy up -d  -> app + Caddy on 80/443 with automatic HTTPS for customer domains
 services:
   app:
@@ -9,7 +10,7 @@ services:
     volumes:
       - ./data:/data
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-8080}:8080"
 
   caddy:
     image: caddy:2.10

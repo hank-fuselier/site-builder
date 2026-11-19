@@ -1,0 +1,10 @@
+# Copy to docker-compose.override.yml to put the app on an existing reverse proxy's Docker network,
+# so that proxy can reach it as http://site-builder-app:8080 (no public port needed).
+services:
+  app:
+    container_name: site-builder-app
+    networks: [default, proxy]
+networks:
+  proxy:
+    external: true
+    name: lossscout_dev   # the existing proxy's network name
