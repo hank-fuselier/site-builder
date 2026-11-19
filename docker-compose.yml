@@ -1,0 +1,25 @@
+# Two ways to run:
+#   docker compose up -d                  -> app only, on port ${APP_PORT:-8080} (put it behind your existing nginx/caddy)
+#   docker compose --profile caddy up -d  -> app + Caddy on 80/443 with automatic HTTPS for customer domains
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/data
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+  caddy:
+    image: caddy:2.10
+    profiles: ["caddy"]
+    restart: unless-stopped
+    depends_on: [app]
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy:/data

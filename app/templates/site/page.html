@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page.title or site.business_name }}{% if page.slug != 'home' %} | {{ site.business_name }}{% endif %}</title>
+<meta name="description" content="{{ page.meta_description }}">
+<meta property="og:title" content="{{ page.title or site.business_name }}">
+<meta property="og:description" content="{{ page.meta_description }}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="{{ fonts_url }}" rel="stylesheet">
+<style>
+:root{
+  --primary:{{ theme.primary }};--primary-dark:{{ theme.primary_dark }};--on-primary:{{ theme.primary_text }};
+  --secondary:{{ theme.secondary }};--on-secondary:{{ theme.secondary_text }};
+  --accent:{{ theme.accent }};--on-accent:{{ theme.accent_text }};
+  --dark:{{ theme.dark }};--light:{{ theme.light }};--link:{{ theme.link }};--tint:{{ theme.tint }};
+  --hf:'{{ theme.heading_font }}',system-ui,sans-serif;--bf:'{{ theme.body_font }}',system-ui,sans-serif;
+  --max:1120px;--r:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--bf);color:var(--dark);background:var(--light);line-height:1.65;font-size:17px;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--hf);line-height:1.15;margin:0 0 .5em;color:var(--dark)}
+h1{font-size:clamp(2.1rem,5vw,3.4rem)}h2{font-size:clamp(1.6rem,3.4vw,2.3rem)}h3{font-size:1.2rem}
+p{margin:0 0 1em}a{color:var(--link)}img{max-width:100%;display:block}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+.btn{display:inline-block;background:var(--accent);color:var(--on-accent);padding:.85em 1.6em;border-radius:999px;font-weight:700;text-decoration:none;border:0;cursor:pointer;font-size:1rem;font-family:var(--bf);transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.15)}
+.btn.alt{background:var(--primary);color:var(--on-primary)}
+header.top{background:#fff;border-bottom:1px solid rgba(0,0,0,.06);position:sticky;top:0;z-index:20}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:72px}
+.brand{display:flex;align-items:center;text-decoration:none;color:var(--primary);font-family:var(--hf);font-weight:700;font-size:1.35rem}
+.brand img,.brand svg{max-height:52px;width:auto}
+nav.main ul{list-style:none;display:flex;gap:4px;margin:0;padding:0;flex-wrap:wrap}
+nav.main a{text-decoration:none;color:var(--dark);padding:.5em .85em;border-radius:8px;font-weight:600;font-size:.97rem}
+nav.main a:hover,nav.main a.on{background:var(--tint);color:var(--primary-dark)}
+.callbar{display:none}
+#navtoggle{display:none}
+.navbtn{display:none;cursor:pointer;font-size:1.6rem;padding:4px 10px;border-radius:8px}
+@media(max-width:820px){
+  .navbtn{display:block}
+  nav.main{display:none;position:absolute;top:72px;left:0;right:0;background:#fff;border-bottom:1px solid rgba(0,0,0,.08);padding:8px 16px 16px}
+  nav.main ul{flex-direction:column}
+  #navtoggle:checked ~ nav.main{display:block}
+  .callbar{display:block;position:fixed;bottom:0;left:0;right:0;z-index:30;text-align:center;background:var(--primary);padding:12px}
+  .callbar a{color:var(--on-primary);font-weight:700;text-decoration:none}
+  body{padding-bottom:52px}
+}
+section{padding:72px 0}
+section.alt{background:var(--tint)}
+.sub{font-size:1.15rem;opacity:.85;max-width:720px}
+.center{text-align:center}.center .sub{margin-left:auto;margin-right:auto}
+.hero{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 60%,var(--secondary) 130%);color:var(--on-primary);padding:110px 0 100px;position:relative;overflow:hidden}
+.hero.has-img{background-size:cover;background-position:center}
+.hero.has-img::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.72),rgba(0,0,0,.35))}
+.hero .wrap{position:relative}
+.hero h1,.hero .sub{color:inherit}.hero.has-img h1,.hero.has-img .sub{color:#fff}
+.hero .sub{font-size:1.25rem;margin-bottom:1.6em}
+.hero .body{max-width:680px;opacity:.92}
+.grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:32px}
+.card{background:#fff;border-radius:var(--r);padding:28px;box-shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04);border-top:4px solid var(--primary)}
+.card .ic{font-size:2rem;margin-bottom:10px}
+.card .detail{font-weight:700;color:var(--primary-dark);margin-top:8px}
+.card img{border-radius:10px;margin-bottom:14px;aspect-ratio:4/3;object-fit:cover;width:100%}
+.services .row{display:flex;gap:18px;padding:22px 0;border-bottom:1px solid rgba(0,0,0,.08);align-items:flex-start}
+.services .row .ic{font-size:1.8rem;width:48px;flex:none}
+.services .row .detail{margin-left:auto;font-weight:700;color:var(--primary-dark);white-space:nowrap}
+.stats .grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.stat{text-align:center}.stat .v{font-family:var(--hf);font-size:2.6rem;font-weight:700;color:var(--primary)}
+.quote{background:#fff;border-radius:var(--r);padding:28px;position:relative;box-shadow:0 8px 24px rgba(0,0,0,.05)}
+.quote::before{content:"\201C";font-family:Georgia,serif;font-size:4rem;color:var(--accent);position:absolute;top:-6px;left:18px;line-height:1}
+.quote p{margin-top:24px;font-style:italic}.quote .who{font-weight:700}
+details{background:#fff;border-radius:10px;padding:18px 22px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+summary{font-weight:700;cursor:pointer;font-family:var(--hf)}
+details p{margin:.8em 0 0}
+.gallery .grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.gallery img{border-radius:12px;aspect-ratio:1;object-fit:cover;width:100%}
+.cta{background:var(--secondary);color:var(--on-secondary)}
+.cta h2,.cta .sub{color:inherit}
+.split{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.split img{border-radius:var(--r)}
+@media(max-width:820px){.split{grid-template-columns:1fr}}
+.contactgrid{display:grid;grid-template-columns:1fr 1.2fr;gap:40px;margin-top:24px}
+@media(max-width:820px){.contactgrid{grid-template-columns:1fr}}
+.info div{margin-bottom:16px}.info b{display:block;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;opacity:.65}
+form.contact{background:#fff;padding:28px;border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.06)}
+form.contact label{display:block;font-weight:600;font-size:.93rem;margin:0 0 4px}
+form.contact input,form.contact textarea{width:100%;padding:12px 14px;border:1px solid #d6d9de;border-radius:10px;font:inherit;margin-bottom:14px;background:#fbfbfc}
+form.contact input:focus,form.contact textarea:focus{outline:2px solid var(--primary);border-color:transparent}
+.hp{position:absolute;left:-5000px}
+.notice{background:#e8f6ee;color:#14532d;padding:14px 18px;border-radius:10px;margin-bottom:18px;font-weight:600}
+.hours ul{list-style:none;padding:0;margin:20px 0 0;max-width:460px}
+.hours li{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed rgba(0,0,0,.15)}
+footer{background:var(--dark);color:rgba(255,255,255,.82);padding:48px 0 28px;font-size:.95rem}
+footer a{color:#fff}
+footer .cols{display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px}
+@media(max-width:820px){footer .cols{grid-template-columns:1fr}}
+footer h3{color:#fff;font-size:1.05rem}
+footer ul{list-style:none;padding:0;margin:0}footer li{margin:6px 0}
+footer .legal{border-top:1px solid rgba(255,255,255,.12);margin-top:32px;padding-top:18px;font-size:.85rem;opacity:.7;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="{{ page_url('home') }}">{% if logo_html %}{{ logo_html }}{% else %}{{ site.business_name }}{% endif %}</a>
+  <input type="checkbox" id="navtoggle"><label for="navtoggle" class="navbtn" aria-label="Menu">&#9776;</label>
+  <nav class="main"><ul>
+  {% for p in site.pages %}<li><a href="{{ page_url(p.slug) }}" class="{{ 'on' if p.slug == page.slug }}">{{ p.nav_label or p.title }}</a></li>{% endfor %}
+  </ul></nav>
+</div></header>
+
+<main>
+{% for s in page.sections %}
+{% set alt = 'alt' if loop.index is even else '' %}
+{% if s.type == 'hero' %}
+  {% set img = asset_url(s.image_asset_id) if s.image_asset_id else '' %}
+  <section class="hero {{ 'has-img' if img }}" {% if img %}style="background-image:url('{{ img }}')"{% endif %}><div class="wrap">
+    <h1>{{ s.heading }}</h1>
+    {% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}
+    {% if s.body %}<div class="body">{{ s.body|paras }}</div>{% endif %}
+    {% if s.cta_label and page_url(s.cta_page) %}<a class="btn" href="{{ page_url(s.cta_page) }}">{{ s.cta_label }}</a>{% endif %}
+    {% if site.contact.phone %} &nbsp; <a class="btn alt" style="background:rgba(255,255,255,.15);color:#fff" href="tel:{{ site.contact.phone|tel }}">Call {{ site.contact.phone }}</a>{% endif %}
+  </div></section>
+
+{% elif s.type == 'text' %}
+  <section class="{{ alt }}"><div class="wrap">
+    {% if s.image_asset_id %}<div class="split"><div>{% endif %}
+    <h2>{{ s.heading }}</h2>{% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}
+    {{ s.body|paras }}
+    {% if s.cta_label and page_url(s.cta_page) %}<a class="btn alt" href="{{ page_url(s.cta_page) }}">{{ s.cta_label }}</a>{% endif %}
+    {% if s.image_asset_id %}</div><img src="{{ asset_url(s.image_asset_id) }}" alt="{{ s.heading }}"></div>{% endif %}
+  </div></section>
+
+{% elif s.type in ('features', 'team') %}
+  <section class="{{ alt }}"><div class="wrap center">
+    <h2>{{ s.heading }}</h2>{% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}
+    {{ s.body|paras }}
+    <div class="grid" style="text-align:left">
+    {% for it in s['items'] %}<div class="card">
+      {% if it.image_asset_id %}<img src="{{ asset_url(it.image_asset_id) }}" alt="{{ it.title }}">{% elif it.icon %}<div class="ic">{{ it.icon }}</div>{% endif %}
+      <h3>{{ it.title }}</h3>{% if it.detail %}<div class="detail" style="margin:0 0 8px">{{ it.detail }}</div>{% endif %}{{ it.text|paras }}
+    </div>{% endfor %}
+    </div>
+    {% if s.cta_label and page_url(s.cta_page) %}<p style="margin-top:32px"><a class="btn alt" href="{{ page_url(s.cta_page) }}">{{ s.cta_label }}</a></p>{% endif %}
+  </div></section>
+
+{% elif s.type == 'services' %}
+  <section class="services {{ alt }}"><div class="wrap">
+    <h2>{{ s.heading }}</h2>{% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}
+    {{ s.body|paras }}
+    {% for it in s['items'] %}<div class="row">
+      <div class="ic">{{ it.icon }}</div>
+      <div><h3>{{ it.title }}</h3>{{ it.text|paras }}</div>
+      {% if it.detail %}<div class="detail">{{ it.detail }}</div>{% endif %}
+    </div>{% endfor %}
+    {% if s.cta_label and page_url(s.cta_page) %}<p style="margin-top:28px"><a class="btn alt" href="{{ page_url(s.cta_page) }}">{{ s.cta_label }}</a></p>{% endif %}
+  </div></section>
+
+{% elif s.type == 'stats' %}
+  <section class="stats {{ alt }}"><div class="wrap center">
+    <h2>{{ s.heading }}</h2>{% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}
+    <div class="grid">{% for it in s['items'] %}<div class="stat"><div class="v">{{ it.detail or it.icon }}</div><div><b>{{ it.title }}</b></div><div>{{ it.text }}</div></div>{% endfor %}</div>
+  </div></section>
+
+{% elif s.type == 'testimonials' %}
+  <section class="{{ alt }}"><div class="wrap center">
+    <h2>{{ s.heading }}</h2>{% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}
+    <div class="grid" style="text-align:left">{% for it in s['items'] %}<div class="quote">{{ it.text|paras }}<div class="who">{{ it.title }}</div>{% if it.detail %}<div style="opacity:.7">{{ it.detail }}</div>{% endif %}</div>{% endfor %}</div>
+  </div></section>
+
+{% elif s.type == 'faq' %}
+  <section class="{{ alt }}"><div class="wrap" style="max-width:820px">
+    <h2>{{ s.heading }}</h2>{% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}
+    {% for it in s['items'] %}<details><summary>{{ it.title }}</summary>{{ it.text|paras }}</details>{% endfor %}
+  </div></section>
+
+{% elif s.type == 'gallery' %}
+  <section class="gallery {{ alt }}"><div class="wrap center">
+    <h2>{{ s.heading }}</h2>{% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}
+    <div class="grid">{% for it in s['items'] if it.image_asset_id %}<figure style="margin:0"><img src="{{ asset_url(it.image_asset_id) }}" alt="{{ it.title }}">{% if it.title %}<figcaption style="margin-top:8px">{{ it.title }}</figcaption>{% endif %}</figure>{% endfor %}</div>
+  </div></section>
+
+{% elif s.type == 'cta' %}
+  <section class="cta"><div class="wrap center">
+    <h2>{{ s.heading }}</h2>{% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}
+    {{ s.body|paras }}
+    {% if s.cta_label and page_url(s.cta_page) %}<a class="btn" href="{{ page_url(s.cta_page) }}">{{ s.cta_label }}</a>{% endif %}
+    {% if site.contact.phone %} &nbsp; <a class="btn alt" href="tel:{{ site.contact.phone|tel }}">{{ site.contact.phone }}</a>{% endif %}
+  </div></section>
+
+{% elif s.type == 'hours' %}
+  <section class="hours {{ alt }}"><div class="wrap">
+    <h2>{{ s.heading }}</h2>{% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}{{ s.body|paras }}
+    <ul>{% if s['items'] %}{% for it in s['items'] %}<li><span>{{ it.title }}</span><span>{{ it.detail or it.text }}</span></li>{% endfor %}{% else %}{% for h in site.contact.hours %}<li>{{ h }}</li>{% endfor %}{% endif %}</ul>
+  </div></section>
+
+{% elif s.type == 'contact' %}
+  <section class="{{ alt }}" id="contact"><div class="wrap">
+    <h2>{{ s.heading }}</h2>{% if s.subheading %}<p class="sub">{{ s.subheading }}</p>{% endif %}{{ s.body|paras }}
+    <div class="contactgrid">
+      <div class="info">
+        {% if site.contact.phone %}<div><b>Phone</b><a href="tel:{{ site.contact.phone|tel }}">{{ site.contact.phone }}</a></div>{% endif %}
+        {% if site.contact.email %}<div><b>Email</b><a href="mailto:{{ site.contact.email }}">{{ site.contact.email }}</a></div>{% endif %}
+        {% if site.contact.address %}<div><b>Address</b>{{ site.contact.address }}<br><a href="https://www.google.com/maps/search/?api=1&query={{ site.contact.address|urlencode }}" target="_blank" rel="noopener">Get directions</a></div>{% endif %}
+        {% if site.contact.service_area %}<div><b>Service area</b>{{ site.contact.service_area }}</div>{% endif %}
+        {% if site.contact.hours %}<div><b>Hours</b>{% for h in site.contact.hours %}{{ h }}<br>{% endfor %}</div>{% endif %}
+      </div>
+      {% if form_action %}
+      <form class="contact" method="post" action="{{ form_action }}">
+        {% if message %}<div class="notice">{{ message }}</div>{% endif %}
+        <input type="hidden" name="page" value="{{ page.slug }}">
+        <div class="hp"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+        <label for="f-name">Name</label><input id="f-name" name="name" required autocomplete="name">
+        <label for="f-email">Email</label><input id="f-email" name="email" type="email" required autocomplete="email">
+        <label for="f-phone">Phone</label><input id="f-phone" name="phone" autocomplete="tel">
+        <label for="f-msg">How can we help?</label><textarea id="f-msg" name="message" rows="5" required></textarea>
+        <button class="btn alt" type="submit">Send message</button>
+      </form>
+      {% elif site.contact.email %}
+      <div class="contact" style="background:#fff;padding:28px;border-radius:14px"><a class="btn alt" href="mailto:{{ site.contact.email }}">Email us</a></div>
+      {% endif %}
+    </div>
+  </div></section>
+{% endif %}
+{% endfor %}
+</main>
+
+<footer><div class="wrap">
+  <div class="cols">
+    <div><h3>{{ site.business_name }}</h3><p>{{ site.footer_blurb or site.tagline }}</p></div>
+    <div><h3>Pages</h3><ul>{% for p in site.pages %}<li><a href="{{ page_url(p.slug) }}">{{ p.nav_label or p.title }}</a></li>{% endfor %}</ul></div>
+    <div><h3>Contact</h3><ul>
+      {% if site.contact.phone %}<li><a href="tel:{{ site.contact.phone|tel }}">{{ site.contact.phone }}</a></li>{% endif %}
+      {% if site.contact.email %}<li><a href="mailto:{{ site.contact.email }}">{{ site.contact.email }}</a></li>{% endif %}
+      {% if site.contact.address %}<li>{{ site.contact.address }}</li>{% endif %}
+      {% for l in site.contact.social_links %}<li><a href="{{ l if l.startswith('http') else 'https://' ~ l }}" target="_blank" rel="noopener">{{ l.split('//')[-1].split('/')[0].replace('www.','') }}</a></li>{% endfor %}
+    </ul></div>
+  </div>
+  <div class="legal"><span>&copy; {{ site.business_name }}</span>{% if builder_name %}<span>Website by {{ builder_name }}</span>{% endif %}</div>
+</div></footer>
+{% if site.contact.phone %}<div class="callbar"><a href="tel:{{ site.contact.phone|tel }}">&#128222; Call {{ site.contact.phone }}</a></div>{% endif %}
+</body>
+</html>

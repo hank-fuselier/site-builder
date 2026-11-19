@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% block body %}
+<div class="head"><h1>Customers</h1></div>
+<form class="card inline" method="post" action="/admin/new">
+  <label>New customer <input name="name" placeholder="Business name, e.g. Bayou Plumbing" required></label>
+  <button>Start interview</button>
+</form>
+<div class="list">
+{% for c in customers %}
+  <a class="card row" href="/admin/c/{{ c.id }}">
+    <span class="sw" style="background:{{ (c.brand or {}).get('primary', '#ccc') }}"></span>
+    <span class="grow"><b>{{ c.name }}</b><br><small>{{ c.domain or ('/s/' ~ c.slug ~ '/') }}</small></span>
+    <span class="pill {{ 'ok' if c.site else '' }}">{{ 'Site ready' if c.site else 'In progress' }}</span>
+  </a>
+{% else %}
+  <p class="muted">No customers yet. Add one above to start.</p>
+{% endfor %}
+</div>
+{% endblock %}

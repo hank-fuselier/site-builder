@@ -1,0 +1,24 @@
+{
+	email {$ACME_EMAIL}
+	on_demand_tls {
+		# Only issue certificates for domains assigned to a customer in the app.
+		ask http://app:8080/internal/allow-domain
+	}
+}
+
+# Your builder's own hostname: admin area + /s/<customer>/ preview links.
+{$SITE_HOST} {
+	reverse_proxy app:8080
+}
+
+# Every customer domain pointed at this server.
+https:// {
+	tls {
+		on_demand
+	}
+	reverse_proxy app:8080
+}
+
+http:// {
+	redir https://{host}{uri} permanent
+}

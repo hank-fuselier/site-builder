@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Site Builder{% endblock %}</title>
+<link rel="stylesheet" href="/static/admin.css">
+</head><body>
+<header class="bar"><a href="/admin" class="logo">◧ Site Builder</a>
+{% if not ai_enabled %}<span class="warn">AI is off: set ANTHROPIC_API_KEY to enable suggestions and site writing</span>{% endif %}
+</header>
+<main class="page">{% block body %}{% endblock %}</main>
+<script>
+// Poll background jobs (reading scans, suggestions, writing the site) and reload when done.
+const jobEl = document.querySelector('[data-job]');
+if (jobEl) {
+  const t = setInterval(async () => {
+    const r = await fetch(jobEl.dataset.job); const j = await r.json();
+    if (j.status !== 'running') { clearInterval(t); location.reload(); }
+  }, 2500);
+}
+document.querySelectorAll('form[data-busy]').forEach(f => f.addEventListener('submit', () => {
+  f.querySelectorAll('button').forEach(b => { b.disabled = true; b.textContent = f.dataset.busy; });
+}));
+document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => {
+  navigator.clipboard.writeText(b.dataset.copy); b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy link', 1500);
+}));
+</script>
+</body></html>

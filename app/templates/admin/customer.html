@@ -1,0 +1,190 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ c.name }} · Site Builder{% endblock %}
+{% block body %}
+<div class="head">
+  <div><a href="/admin" class="muted">← Customers</a><h1>{{ c.name }}</h1></div>
+  {% if c.site %}<div class="links">
+    <a class="btn" href="/s/{{ c.slug }}/" target="_blank">Open preview ↗</a>
+    <button class="btn ghost" data-copy="{{ preview_url(c) }}">Copy link</button>
+  </div>{% endif %}
+</div>
+
+{% if job %}
+  {% if job.status == 'running' %}<div class="banner" data-job="/admin/c/{{ c.id }}/job"><span class="spin"></span> {{ job.kind }}… this can take a minute or two. The page will refresh itself.</div>
+  {% elif job.status == 'error' %}<div class="banner err">{{ job.kind }} failed: {{ job.error }}</div>{% endif %}
+{% endif %}
+
+<nav class="steps"><a href="#interview">1 Interview</a><a href="#collateral">2 Collateral</a><a href="#brand">3 Brand</a><a href="#domain">4 Domain</a><a href="#site">5 Website</a><a href="#leads">Leads ({{ leads|length }})</a></nav>
+
+<section id="interview" class="card">
+  <h2>1 · Interview</h2>
+  <form method="post" action="/admin/c/{{ c.id }}/interview" class="grid2">
+    {% for key, label, kind in interview_fields %}
+      <label class="{{ 'wide' if kind == 'textarea' }}">{{ label }}
+      {% if kind == 'textarea' %}<textarea name="{{ key }}" rows="3">{{ c.interview.get(key, '') }}</textarea>
+      {% else %}<input name="{{ key }}" value="{{ c.interview.get(key, '') }}">{% endif %}</label>
+    {% endfor %}
+    <div class="wide"><button>Save interview</button></div>
+  </form>
+</section>
+
+<section id="collateral" class="card">
+  <h2>2 · Marketing collateral</h2>
+  <p class="muted">Upload scans or photos of business cards, flyers, brochures, signs, truck wraps, existing logos (JPG, PNG, PDF, SVG). Colors are pulled out automatically.</p>
+  <form method="post" action="/admin/c/{{ c.id }}/upload" enctype="multipart/form-data" class="inline" data-busy="Uploading…">
+    <input type="file" name="files" multiple accept="image/*,.pdf,.svg" required>
+    <button>Upload</button>
+  </form>
+  <div class="assets">
+  {% for a in assets %}
+    <figure>
+      <img src="/assets/{{ a.id }}/preview" alt="{{ a.original_name }}" onerror="this.style.display='none'">
+      <figcaption><small>#{{ a.id }} · {{ a.original_name }}</small>
+        <div class="chips">{% for col in a.colors %}<span class="chip" style="background:{{ col.hex }}" title="{{ col.hex }}"></span>{% endfor %}</div>
+        <form method="post" action="/admin/c/{{ c.id }}/asset/{{ a.id }}/delete"><button class="link">Remove</button></form>
+      </figcaption>
+    </figure>
+  {% endfor %}
+  </div>
+  {% if assets %}
+  <form method="post" action="/admin/c/{{ c.id }}/analyze" class="inline">
+    <button {{ 'disabled' if not ai_enabled }}>Read the collateral with AI</button>
+    <span class="muted">Pulls out services, phone, hours, taglines and style, and fills blank interview fields.</span>
+  </form>
+  {% endif %}
+  {% if sugg.findings %}
+  <details class="findings" open><summary>What was found on the collateral</summary>
+    <dl>{% for k, v in sugg.findings.items() if v %}<dt>{{ k.replace('_', ' ') }}</dt><dd>{% if v is string %}{{ v }}{% else %}{{ v|join(', ') }}{% endif %}</dd>{% endfor %}</dl>
+  </details>
+  {% endif %}
+</section>
+
+<section id="brand" class="card">
+  <h2>3 · Brand</h2>
+  <div class="brandprev" style="--p:{{ theme.primary }};--s:{{ theme.secondary }};--a:{{ theme.accent }};--d:{{ theme.dark }};--l:{{ theme.light }}">
+    <div class="logo-box">{% if c.brand.logo_asset_id %}<img src="/assets/{{ c.brand.logo_asset_id }}" alt="logo">{% elif c.brand.logo_svg %}{{ c.brand.logo_svg|safe }}{% else %}<span class="muted">No logo yet</span>{% endif %}</div>
+    <div class="swatches"><span style="background:var(--p)">Primary</span><span style="background:var(--s)">Secondary</span><span style="background:var(--a)">Accent</span><span style="background:var(--d)">Text</span><span style="background:var(--l);color:#333">Page</span></div>
+    <div class="muted">Fonts: {{ font_pairs[c.brand.fonts or 'modern'].label }}</div>
+  </div>
+
+  <form method="post" action="/admin/c/{{ c.id }}/brand" class="grid5">
+    {% for k in ['primary','secondary','accent','dark','light'] %}
+      <label>{{ k|capitalize }}<input type="color" name="{{ k }}" value="{{ c.brand.get(k) or '#000000' }}"></label>
+    {% endfor %}
+    <label>Fonts<select name="fonts">{% for key, f in font_pairs.items() %}<option value="{{ key }}" {{ 'selected' if c.brand.fonts == key }}>{{ f.label }}</option>{% endfor %}</select></label>
+    <label>Logo from upload<select name="logo_asset_id"><option value="0">(use text logo)</option>{% for a in assets if a.kind in ('image','svg') %}<option value="{{ a.id }}" {{ 'selected' if c.brand.logo_asset_id == a.id }}>#{{ a.id }} {{ a.original_name }}</option>{% endfor %}</select></label>
+    <div><button>Save brand</button></div>
+  </form>
+
+  {% if colors %}
+  <p><b>Colors found in the scans:</b> {% for col in colors %}<span class="chip big" style="background:{{ col.hex }}" title="{{ col.hex }}"></span>{% endfor %}</p>
+  <form method="post" action="/admin/c/{{ c.id }}/brand/from-scans" class="inline"><button class="ghost">Use the scan colors</button></form>
+  {% endif %}
+
+  <div class="inline">
+    <form method="post" action="/admin/c/{{ c.id }}/brand/suggest"><button {{ 'disabled' if not ai_enabled }}>Suggest color schemes and logos</button></form>
+  </div>
+
+  {% if sugg.brand %}
+  <h3>Suggested color schemes</h3>
+  <div class="options">
+  {% for p in sugg.brand.palettes %}
+    <div class="opt">
+      <div class="bar5">{% for k in ['primary','secondary','accent','dark','light'] %}<span style="background:{{ p[k] }}"></span>{% endfor %}</div>
+      <b>{{ p.name }}</b><p class="muted">{{ p.rationale }}</p><small>{{ font_pairs[p.fonts].label }}</small>
+      <form method="post" action="/admin/c/{{ c.id }}/brand/palette/{{ loop.index0 }}"><button class="ghost">Use this</button></form>
+    </div>
+  {% endfor %}
+  </div>
+  <h3>Suggested text logos <small class="muted">(shown in the current colors)</small></h3>
+  <div class="options">
+  {% for lc in sugg.brand.logo_concepts %}
+    <div class="opt"><div class="logo-box">{{ logo_previews[loop.index0]|safe }}</div><p class="muted">{{ lc.rationale }}</p>
+      <form method="post" action="/admin/c/{{ c.id }}/brand/logo/{{ loop.index0 }}"><button class="ghost">Use this logo</button></form></div>
+  {% endfor %}
+  </div>
+  {% endif %}
+  <details><summary>Make a text logo by hand</summary>
+    <form method="post" action="/admin/c/{{ c.id }}/brand/logo-text" class="grid5">
+      <label>Name<input name="name" value="{{ c.name }}" required></label>
+      <label>Tagline<input name="tagline"></label>
+      <label>Icon<select name="icon">{% for i in icons %}<option>{{ i }}</option>{% endfor %}</select></label>
+      <div><button>Make logo</button></div>
+    </form>
+  </details>
+</section>
+
+<section id="domain" class="card">
+  <h2>4 · Domain</h2>
+  <form method="post" action="/admin/c/{{ c.id }}/domain" class="inline">
+    <label>Customer's domain <input name="domain" value="{{ c.domain or '' }}" placeholder="example.com"></label>
+    <button>Save</button>
+  </form>
+  {% if c.domain %}
+  <div class="note">
+    <b>To make {{ c.domain }} show this site,</b> the customer (or you) adds these DNS records at their registrar:
+    <ul><li><code>A</code> record for <code>@</code> and <code>www</code> → this server's public IP</li></ul>
+    HTTPS is set up automatically the first time someone visits.
+  </div>
+  {% endif %}
+  <p class="muted">Share link while it's in progress: <code>{{ preview_url(c) }}</code></p>
+  <h3>No domain yet? Find one</h3>
+  <div class="inline">
+    <form method="post" action="/admin/c/{{ c.id }}/domains/suggest"><button {{ 'disabled' if not ai_enabled }}>Suggest available domains</button></form>
+    <form method="post" action="/admin/c/{{ c.id }}/domains/check" class="inline" data-busy="Checking…">
+      <input name="names" placeholder="check specific names, comma separated"><button class="ghost">Check</button>
+    </form>
+  </div>
+  {% if sugg.domains %}
+  <table class="doms">
+  {% for d in sugg.domains|sort(attribute='status') %}
+    <tr class="{{ d.status }}"><td>{{ d.domain }}</td><td><span class="pill {{ 'ok' if d.status == 'available' }}">{{ d.status }}</span></td>
+    <td>{% if d.status == 'available' %}<form method="post" action="/admin/c/{{ c.id }}/domain"><input type="hidden" name="domain" value="{{ d.domain }}"><button class="link">Use for this customer</button></form>{% endif %}</td></tr>
+  {% endfor %}
+  </table>
+  <p class="muted"><small>"Available" means no registration was found in the registry just now. Confirm at a registrar before promising it; premium names can cost more.</small></p>
+  {% endif %}
+</section>
+
+<section id="site" class="card">
+  <h2>5 · Website</h2>
+  <form method="post" action="/admin/c/{{ c.id }}/generate" data-busy="Starting…">
+    {% if c.site %}
+      <label>What should change? <textarea name="instructions" rows="3" placeholder="e.g. Add a Gallery page using the truck photos. Make the home page shorter. Mention free estimates."></textarea></label>
+      <div class="inline"><button {{ 'disabled' if not ai_enabled }}>Revise the site</button>
+      <label class="check"><input type="checkbox" name="fresh" value="1"> start over from scratch</label></div>
+    {% else %}
+      <label>Anything special for the first draft? <textarea name="instructions" rows="2"></textarea></label>
+      <button {{ 'disabled' if not ai_enabled }}>Build the website</button>
+    {% endif %}
+  </form>
+
+  {% if c.site %}
+  <div class="pages">{% for p in c.site.pages %}<a href="/s/{{ c.slug }}/{{ '' if p.slug == 'home' else p.slug }}" target="_blank">{{ p.nav_label or p.title }} ↗</a>{% endfor %}</div>
+  <iframe class="frame" src="/s/{{ c.slug }}/" title="Preview"></iframe>
+  <div class="inline">
+    <a class="btn ghost" href="/admin/c/{{ c.id }}/export.zip">Download as static files (.zip)</a>
+    <form method="post" action="/admin/c/{{ c.id }}/publish"><button class="ghost">{{ 'Hide preview link' if c.published else 'Make preview link live' }}</button></form>
+    {% if not c.published %}<span class="pill">hidden</span>{% endif %}
+  </div>
+  <details><summary>Edit content directly (advanced)</summary>
+    <form method="post" action="/admin/c/{{ c.id }}/site-json"><textarea name="site_json" rows="24" class="mono">{{ site_json }}</textarea><button>Save content</button></form>
+  </details>
+  {% if versions %}<details><summary>Version history</summary><table>
+    {% for v in versions %}<tr><td>#{{ v.id }}</td><td>{{ v.note }}</td><td><form method="post" action="/admin/c/{{ c.id }}/version/{{ v.id }}/restore"><button class="link">Restore</button></form></td></tr>{% endfor %}
+  </table></details>{% endif %}
+  {% endif %}
+</section>
+
+<section id="leads" class="card">
+  <h2>Leads from the contact form</h2>
+  {% for l in leads %}<div class="lead"><b>{{ l.name }}</b> · {{ l.email }} {{ l.phone }}<p>{{ l.message }}</p></div>
+  {% else %}<p class="muted">None yet.</p>{% endfor %}
+</section>
+
+<details class="danger"><summary>Delete this customer</summary>
+  <form method="post" action="/admin/c/{{ c.id }}/delete" class="inline">
+    <input name="confirm" placeholder="type {{ c.slug }} to confirm"><button class="red">Delete everything</button>
+  </form>
+</details>
+{% endblock %}
