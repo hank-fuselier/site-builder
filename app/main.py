@@ -435,6 +435,15 @@ def allow_domain(domain: str = ""):
     raise HTTPException(404)
 
 
+@app.get("/favicon.ico")
+def favicon(request: Request):
+    """LossScout icon for the admin; customer domains get no icon so they don't show LossScout's."""
+    if db.get_customer_by_domain(request.headers.get("host", "")):
+        raise HTTPException(404)
+    return FileResponse(Path(__file__).parent / "static" / "favicon.ico", media_type="image/x-icon",
+                        headers={"Cache-Control": "public, max-age=86400"})
+
+
 @app.get("/healthz")
 def healthz():
     return {"ok": True}
